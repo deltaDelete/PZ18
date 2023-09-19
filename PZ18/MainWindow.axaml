@@ -2,8 +2,16 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:PZ17.ViewModels"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="PZ18.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        VerticalContentAlignment="Center"
+        HorizontalContentAlignment="Center"
         Title="PZ18">
-    Welcome to Avalonia!
+    <StackPanel Spacing="15">
+        <Button Command="{Binding OpenClientsCommand}" Content="Клиенты" HorizontalAlignment="Stretch"/>
+        <Button Command="{Binding OpenProceduresCommand}" Content="Процедуры" HorizontalAlignment="Stretch"/>
+        <Button Command="{Binding OpenProceduresClientsCommand}" Content="Проведенные процедуры" HorizontalAlignment="Stretch"/>
+    </StackPanel>
 </Window>

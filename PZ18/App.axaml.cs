@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 
@@ -15,5 +16,15 @@ public partial class App : Application {
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+}
+
+public static class AppExtensions {
+    public static Window? GetMainWindow(this Application app) {
+        if (app.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) {
+            return desktop.MainWindow;
+        }
+
+        return null;
     }
 }

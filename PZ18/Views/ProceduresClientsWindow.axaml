@@ -1,0 +1,34 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:PZ17.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="PZ18.Views.ProceduresClientsWindow"
+        x:DataType="viewModels:ProceduresClientsWindowViewModel"
+        Title="ProceduresClientsWindow">
+    <DockPanel LastChildFill="True">
+        <TextBox DockPanel.Dock="Top" Text="{Binding SearchQuery, Mode=TwoWay}"/>
+        <DataGrid x:Name="DataGrid"
+                  ItemsSource="{Binding ProceduresClients}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  GridLinesVisibility="All">
+            <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding ProcedureId}" Header="Код"/>
+                <DataGridTextColumn Header="Клиент">
+                    <DataGridTextColumn.Binding>
+                        <MultiBinding StringFormat="{}{0} {1}">
+                            <Binding Path="Client.LastName" />
+                            <Binding Path="Client.FirstName" />
+                        </MultiBinding>
+                    </DataGridTextColumn.Binding>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding ProcedureId}" Header="Код процедуры"/>
+                <DataGridTextColumn Binding="{Binding Procedure.ProcedureName}" Header="Процедура"/>
+                <DataGridTextColumn Binding="{Binding Date}" Header="Дата"/>
+                <DataGridTextColumn Binding="{Binding Price}" Header="Стоимость"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</Window>

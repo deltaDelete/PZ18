@@ -1,0 +1,35 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:PZ17.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="PZ18.Views.ClientsWindow"
+        x:DataType="viewModels:ClientsWindowViewModel"
+        Title="ClientsWindow">
+    <DockPanel LastChildFill="True">
+        <StackPanel Spacing="15" Orientation="Horizontal" DockPanel.Dock="Top">
+            <TextBox MinWidth="256" Text="{Binding SearchQuery, Mode=TwoWay}"/>
+            <ComboBox SelectedIndex="{Binding SelectedSearchColumn}">
+                <ComboBoxItem>Все столбцы</ComboBoxItem>
+                <ComboBoxItem>Код</ComboBoxItem>
+                <ComboBoxItem>Фамилия</ComboBoxItem>
+                <ComboBoxItem>Имя</ComboBoxItem>
+                <ComboBoxItem>Пол</ComboBoxItem>
+            </ComboBox>
+            <CheckBox IsChecked="{Binding IsSortByDescending}">Сортировка по убыванию</CheckBox>
+        </StackPanel>
+        <DataGrid x:Name="DataGrid"
+                  ItemsSource="{Binding Clients}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  GridLinesVisibility="All">
+            <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding ClientId}" Header="Код"/>
+                <DataGridTextColumn Binding="{Binding LastName}" Header="Фамилия"/>
+                <DataGridTextColumn Binding="{Binding FirstName}" Header="Имя"/>
+                <DataGridTextColumn Binding="{Binding Gender.Name}" Header="Пол"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</Window>

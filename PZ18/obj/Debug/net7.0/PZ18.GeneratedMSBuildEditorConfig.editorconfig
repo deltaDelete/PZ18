@@ -20,3 +20,12 @@ build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
 [/home/KHPK.RU/student/RiderProjects/PZ18/PZ18/MainWindow.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/KHPK.RU/student/RiderProjects/PZ18/PZ18/Views/ClientsWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/KHPK.RU/student/RiderProjects/PZ18/PZ18/Views/ProceduresClientsWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/KHPK.RU/student/RiderProjects/PZ18/PZ18/Views/ProceduresWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
