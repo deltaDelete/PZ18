@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PZ18", "PZ18\PZ18.csproj", "{FA94C29B-B722-418C-A95E-65D1158DB20D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FA94C29B-B722-418C-A95E-65D1158DB20D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA94C29B-B722-418C-A95E-65D1158DB20D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA94C29B-B722-418C-A95E-65D1158DB20D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA94C29B-B722-418C-A95E-65D1158DB20D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
