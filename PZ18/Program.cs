@@ -16,5 +16,6 @@ class Program {
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .WithInterFont()
+            .With(new X11PlatformOptions() {RenderingMode = new [] { X11RenderingMode.Egl }})
             .LogToTrace();
 }

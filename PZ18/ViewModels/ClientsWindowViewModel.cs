@@ -4,15 +4,20 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
+using System.Windows.Input;
+using Avalonia.Controls;
 using Microsoft.VisualBasic.CompilerServices;
 using PZ17.Models;
+using PZ18.ViewModels.dialogs;
 
 namespace PZ17.ViewModels;
 
 public class ClientsWindowViewModel : ViewModelBase {
+    private readonly Window _view;
     private string _searchQuery = string.Empty;
     private ObservableCollection<Client> _clients = new();
-    private List<Client> _clientsFull = new List<Client>();
+    private List<Client> _clientsFull;
     private int _selectedSearchColumn;
     private bool _isSortByDescending = false;
 
@@ -40,6 +45,8 @@ public class ClientsWindowViewModel : ViewModelBase {
         }
     }
 
+    public ICommand EditItemCommand { get; }
+    public ICommand RemoveItemCommand { get; }
 
     public string SearchQuery {
         get => _searchQuery;
@@ -50,9 +57,32 @@ public class ClientsWindowViewModel : ViewModelBase {
         }
     }
 
-    public ClientsWindowViewModel() {
+    public ClientsWindowViewModel(Window view) {
+        _view = view;
+        EditItemCommand = new AsyncCommand<Client>(EditItem);
+        RemoveItemCommand = new AsyncCommand<Client>(RemoveItem);
         GetDataFromDb();
         PropertyChanged += OnSearchChanged;
+    }
+
+    private async Task RemoveItem(Client? arg) {
+        if (arg is null) return;
+        new ConfirmationDialog(
+            "Вы собираетесь удалить строку",
+            $"Пользователь: {arg.LastName} {arg.FirstName}",
+            async dialog => {
+                await using var db = new Database();
+                await db.RemoveAsync(arg);
+                GetDataFromDb();
+            },
+            dialog => {}
+        ).ShowDialog(_view);
+    }
+
+    private async Task EditItem(Client? arg) {
+        if (arg is null) return;
+        await new EditUserDialog(arg).ShowDialog(_view);
+        GetDataFromDb();
     }
 
     private void OnSearchChanged(object? sender, PropertyChangedEventArgs e) {
@@ -62,7 +92,7 @@ public class ClientsWindowViewModel : ViewModelBase {
             return;
         }
 
-        IEnumerable<Client> filtered = SearchQuery == ""
+        var filtered = SearchQuery == ""
             ? new ObservableCollection<Client>(_clientsFull)
             : SelectedSearchColumn switch {
                 1 => _clientsFull
@@ -82,36 +112,20 @@ public class ClientsWindowViewModel : ViewModelBase {
                     )
             };
 
-        switch (SelectedSearchColumn) {
-            case 2:
-                Clients = new(
-                    IsSortByDescending
-                        ? filtered.OrderByDescending(it => it.LastName)
-                        : filtered.OrderBy(it => it.LastName)
-                );
-                break;
-            case 3:
-                Clients = new(
-                    IsSortByDescending
-                        ? filtered.OrderByDescending(it => it.FirstName)
-                        : filtered.OrderBy(it => it.FirstName)
-                );
-                break;
-            case 4:
-                Clients = new(
-                    IsSortByDescending
-                        ? filtered.OrderByDescending(it => it.Gender.Name)
-                        : filtered.OrderBy(it => it.Gender.Name)
-                );
-                break;
-            default:
-                Clients = new(
-                    IsSortByDescending
-                        ? filtered.OrderByDescending(it => it.ClientId)
-                        : filtered.OrderBy(it => it.ClientId)
-                );
-                break;
-        }
+        Clients = SelectedSearchColumn switch {
+            2 => new(IsSortByDescending
+                ? filtered.OrderByDescending(it => it.LastName)
+                : filtered.OrderBy(it => it.LastName)),
+            3 => new(IsSortByDescending
+                ? filtered.OrderByDescending(it => it.FirstName)
+                : filtered.OrderBy(it => it.FirstName)),
+            4 => new(IsSortByDescending
+                ? filtered.OrderByDescending(it => it.Gender.Name)
+                : filtered.OrderBy(it => it.Gender.Name)),
+            _ => new(IsSortByDescending
+                ? filtered.OrderByDescending(it => it.ClientId)
+                : filtered.OrderBy(it => it.ClientId))
+        };
     }
 
     private async void GetDataFromDb() {
@@ -122,7 +136,7 @@ public class ClientsWindowViewModel : ViewModelBase {
             it.Gender = it.Gender = db.GetById<Gender>(it.GenderId);
             return it;
         }).ToList();
-        _clientsFull.AddRange(list);
+        _clientsFull = list;
         Clients = new ObservableCollection<Client>(_clientsFull);
     }
 }

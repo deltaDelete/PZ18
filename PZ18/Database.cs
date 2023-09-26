@@ -12,17 +12,23 @@ using PZ17.Models;
 namespace PZ17;
 
 public class Database : IDisposable, IAsyncDisposable {
-    public static readonly MySqlConnectionStringBuilder ConnectionString = new() {
-        Server = "10.10.1.24",
-        Database = "pro1_2",
-        UserID = "user_01",
-        Password = "user01pro"
+    // public static readonly MySqlConnectionStringBuilder ConnectionStringBuilder = new() {
+    //     Server = "10.10.1.24",
+    //     Database = "pro1_2",
+    //     UserID = "user_01",
+    //     Password = "user01pro"
+    // };
+    public static readonly MySqlConnectionStringBuilder ConnectionStringBuilder = new() {
+        Server = "localhost",
+        Database = "pz17",
+        UserID = "dev",
+        Password = "devPassword"
     };
 
     private MySqlConnection _connection;
 
     public Database() {
-        _connection = new MySqlConnection(ConnectionString.ConnectionString);
+        _connection = new MySqlConnection(ConnectionStringBuilder.ConnectionString);
         _connection.Open();
     }
 
@@ -47,6 +53,7 @@ public class Database : IDisposable, IAsyncDisposable {
                     throw new Exception($"Атрибут Column свойства {column.Property.Name} типа {nameof(T)} " +
                                         "не имеет заданного имени");
                 }
+
                 column.Property.SetValue(obj, reader.GetValue(column.ColumnAttribute.Name));
             }
 
@@ -83,14 +90,17 @@ public class Database : IDisposable, IAsyncDisposable {
                     throw new Exception($"Атрибут Column свойства {column.Property.Name} типа {nameof(T)} " +
                                         "не имеет заданного имени");
                 }
+
                 column.Property.SetValue(obj, reader.GetValue(column.ColumnAttribute.Name));
             }
+
             return obj;
         }
+
         cmd.Cancel();
         return default;
     }
-    
+
     static Func<CustomAttributeData, bool> typeChecker = p => p.AttributeType == typeof(ColumnAttribute);
 
     private static IEnumerable<ColumnInfo> GetColumns<T>() {
@@ -98,7 +108,10 @@ public class Database : IDisposable, IAsyncDisposable {
             .GetProperties()
             .Where(it => it.CustomAttributes.Any(typeChecker))
             .Select(
-                it => new ColumnInfo(it, it.GetCustomAttribute<ColumnAttribute>()!)
+                it => new ColumnInfo(
+                    it, 
+                    it.GetCustomAttribute<ColumnAttribute>()!, 
+                    it.GetCustomAttribute<DbTypeAttribute>()!.DbType)
             );
     }
 
@@ -109,10 +122,9 @@ public class Database : IDisposable, IAsyncDisposable {
         var tableInfos = info.ToList();
         return tableInfos.Any() ? tableInfos.First() : null;
     }
-    
-    
-    public static IEnumerable<ForeignKeyInfo> GetForeignKeys<T>()
-    {
+
+
+    public static IEnumerable<ForeignKeyInfo> GetForeignKeys<T>() {
         var props = typeof(T)
             .GetProperties()
             .Where(
@@ -126,7 +138,21 @@ public class Database : IDisposable, IAsyncDisposable {
         return info;
     }
 
-    public record ColumnInfo(PropertyInfo Property, ColumnAttribute ColumnAttribute);
+    public static ColumnInfo GetPrimaryKey<T>() {
+        var prop = typeof(T)
+            .GetProperties()
+            .FirstOrDefault(it => it.GetCustomAttribute<KeyAttribute>() is not null
+                                  && it.GetCustomAttribute<ColumnAttribute>() is not null);
+        return new ColumnInfo(
+            prop,
+            prop.GetCustomAttribute<ColumnAttribute>(),
+            prop.GetCustomAttribute<DbTypeAttribute>().DbType
+        );
+    }
+
+    public record ColumnInfo(PropertyInfo Property, ColumnAttribute ColumnAttribute, MySqlDbType DbType) {
+        public string ParameterName => $"@{ColumnAttribute.Name}";
+    };
 
     public record TableInfo(Type Type, String Name);
 
@@ -137,7 +163,7 @@ public class Database : IDisposable, IAsyncDisposable {
     }
 
     #region Async
-    
+
     public async ValueTask DisposeAsync() {
         await _connection.DisposeAsync();
     }
@@ -162,7 +188,8 @@ public class Database : IDisposable, IAsyncDisposable {
 
         var primaryKey = primaryKeyAttribute.Name;
 
-        await using var cmd = new MySqlCommand($"select * from `{tableInfo.Name}` where `{primaryKey}` = {id}", _connection);
+        await using var cmd =
+            new MySqlCommand($"select * from `{tableInfo.Name}` where `{primaryKey}` = {id}", _connection);
         await using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync()) {
             var obj = new T();
@@ -177,9 +204,10 @@ public class Database : IDisposable, IAsyncDisposable {
 
             return obj;
         }
+
         return default;
     }
-    
+
     public async IAsyncEnumerable<T> GetAsync<T>() where T : new() {
         var columns = GetColumns<T>().ToList();
         var tableInfo = GetTableName<T>();
@@ -196,6 +224,7 @@ public class Database : IDisposable, IAsyncDisposable {
                     throw new Exception($"Атрибут Column свойства {column.Property.Name} типа {nameof(T)} " +
                                         "не имеет заданного имени");
                 }
+
                 column.Property.SetValue(obj, reader.GetValue(column.ColumnAttribute.Name));
             }
 
@@ -204,25 +233,76 @@ public class Database : IDisposable, IAsyncDisposable {
     }
 
     public async void InsertAsync<T>(T obj) where T : new() {
-        var columns = GetColumns<T>().ToList();
+        var columns = GetColumns<T>()
+            .Where(it => it.Property.GetCustomAttribute<KeyAttribute>() is null)
+            .ToList();
         var columnStr = String.Join(',', columns.Select(it => it.ColumnAttribute.Name!));
         var valuesStr = String.Join(',', columns.Select(it => '@' + it.ColumnAttribute.Name!));
-        
+
         var tableInfo = GetTableName<T>();
         if (tableInfo is null) throw new Exception($"Тип {nameof(T)} не имеет атрибута Table");
 
-        columns.Select(it => it.Property.GetValue(obj));
-    
         if (_connection.State != ConnectionState.Open) _connection.Open();
         await using var cmd = new MySqlCommand(
             $"""
-             insert into `{tableInfo.Name}`({columns})
+             insert into `{tableInfo.Name}` ({columnStr})
              values ({valuesStr});
              """
             , _connection);
-        await using var reader = await cmd.ExecuteReaderAsync();
-    
+        foreach (var columnInfo in columns) {
+            cmd.Parameters.Add(columnInfo.ParameterName, columnInfo.DbType);
+            cmd.Parameters[columnInfo.ParameterName].Value = columnInfo.Property.GetValue(obj);
+        }
+
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task UpdateAsync<T>(int id, T obj) where T : new() {
+        var columns = GetColumns<T>()
+            .Where(it => it.Property.GetCustomAttribute<KeyAttribute>() is null)
+            .ToList();
+        var keyName = GetPrimaryKey<T>().ColumnAttribute.Name;
+        if (keyName is null) throw new Exception($"Тип {nameof(T)} не имеет атрибута Key");
+        var setters = string.Join(",\n",
+            columns.Select(it => $"{it.ColumnAttribute.Name} = {it.ParameterName}"));
+
+        var tableInfo = GetTableName<T>();
+        if (tableInfo is null) throw new Exception($"Тип {nameof(T)} не имеет атрибута Table");
+
+        if (_connection.State != ConnectionState.Open) _connection.Open();
+        await using var cmd = new MySqlCommand(
+            $"""
+             update `{tableInfo.Name}`
+             set
+                 {setters}
+             where {keyName} = {id};
+             """
+            , _connection);
+        foreach (var columnInfo in columns) {
+            cmd.Parameters.Add(columnInfo.ParameterName, columnInfo.DbType);
+            cmd.Parameters[columnInfo.ParameterName].Value = columnInfo.Property.GetValue(obj);
+        }
+
+        await cmd.ExecuteNonQueryAsync();
     }
 
     #endregion
+
+    public async Task RemoveAsync<T>(T obj) {
+        var key = GetPrimaryKey<T>();
+        if (key is null) throw new Exception($"Тип {nameof(T)} не имеет атрибута Key");
+
+        var tableInfo = GetTableName<T>();
+        if (tableInfo is null) throw new Exception($"Тип {nameof(T)} не имеет атрибута Table");
+
+        if (_connection.State != ConnectionState.Open) _connection.Open();
+        await using var cmd = new MySqlCommand(
+            $"""
+             delete from `{tableInfo.Name}`
+             where {key.ColumnAttribute.Name} = {key.Property.GetValue(obj)};
+             """
+            , _connection);
+
+        await cmd.ExecuteNonQueryAsync();
+    }
 }

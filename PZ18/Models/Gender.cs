@@ -1,11 +1,17 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MySqlConnector;
 
 namespace PZ17.Models;
 
-[Table("gender")]
+[Table("genders")]
 public class Gender {
-    [Key] [Column("gender_id")] public int GenderId { get; set; }
+    [Key]
+    [Column("gender_id")]
+    [DbType(MySqlDbType.Int32)]
+    public int GenderId { get; set; }
 
-    [Column("name")] public string Name { get; set; } = string.Empty;
+    [Column("name")]
+    [DbType(MySqlDbType.VarChar)]
+    public string Name { get; set; } = string.Empty;
 }
