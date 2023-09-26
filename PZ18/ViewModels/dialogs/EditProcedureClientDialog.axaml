@@ -1,0 +1,55 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:models="clr-namespace:PZ17.Models"
+        WindowStartupLocation="CenterOwner"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="PZ18.ViewModels.dialogs.EditProcedureClientDialog"
+        x:DataType="models:ProcedureClient"
+        Title="EditUserDialog">
+    <StackPanel Orientation="Vertical" Spacing="15" HorizontalAlignment="Stretch" Margin="15">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Клиент" />
+            <ComboBox SelectedIndex="{Binding ClientId}" SelectedItem="{Binding Client}" Name="ClientBox">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:Client">
+                        <TextBlock>
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="{}{0} {1}">
+                                    <MultiBinding.Bindings>
+                                        <Binding Path="LastName" />
+                                        <Binding Path="FirstName" />
+                                    </MultiBinding.Bindings>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Процедура" />
+            <ComboBox SelectedIndex="{Binding ProcedureId}" SelectedItem="{Binding Procedure}" Name="ProcedureBox">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:Procedure">
+                        <TextBlock Text="{Binding ProcedureName}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Дата" />
+            <DatePicker SelectedDate="{Binding Date}" />
+            <TimePicker SelectedTime="{Binding Date}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Стоимость" />
+            <NumericUpDown Value="{Binding Price}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Content="Отмена" IsCancel="True" Click="CancelClick" />
+            <Button Content="Сохранить" IsDefault="True" Click="ConfirmClick" />
+        </StackPanel>
+    </StackPanel>
+</Window>

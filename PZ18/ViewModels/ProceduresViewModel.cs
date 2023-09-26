@@ -57,11 +57,13 @@ public class ProceduresViewModel : ViewModelBase {
 
     public ICommand EditItemCommand { get; }
     public ICommand RemoveItemCommand { get; }
+    public ICommand NewItemCommand { get; }
     
     public ProceduresViewModel(Window view) {
         _view = view;
         EditItemCommand = new AsyncCommand<Procedure>(EditItem);
         RemoveItemCommand = new AsyncCommand<Procedure>(RemoveItem);
+        NewItemCommand = new AsyncCommand(NewItem);
         GetDataFromDb();
         PropertyChanged += OnSearchChanged;
     }
@@ -127,7 +129,25 @@ public class ProceduresViewModel : ViewModelBase {
 
     private async Task EditItem(Procedure? arg) {
         if (arg is null) return;
-        await new EditProcedureDialog(arg).ShowDialog(_view);
+        await new EditProcedureDialog(
+            arg,
+            async procedure => {
+                await using var db = new Database();
+                await db.UpdateAsync(procedure.ProcedureId, procedure);
+            }
+        ).ShowDialog(_view);
+        GetDataFromDb();
+    }
+    
+    
+    private async Task NewItem() {
+        await new EditProcedureDialog(
+            new Procedure(),
+            async procedure => {
+                await using var db = new Database();
+                await db.InsertAsync(procedure);
+            }
+        ).ShowDialog(_view);
         GetDataFromDb();
     }
 }

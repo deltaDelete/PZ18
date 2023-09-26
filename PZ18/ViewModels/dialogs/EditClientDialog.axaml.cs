@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -8,8 +9,11 @@ using PZ17.Models;
 
 namespace PZ18.ViewModels.dialogs; 
 
-public partial class EditUserDialog : Window {
-    public EditUserDialog(Client client) {
+public partial class EditClientDialog : Window {
+    private readonly Action<Client> _confirmAction;
+
+    public EditClientDialog(Client client, Action<Client> confirmAction) {
+        _confirmAction = confirmAction;
         InitializeComponent();
         DataContext = client;
         InitializeGenderBox();
@@ -26,10 +30,7 @@ public partial class EditUserDialog : Window {
     }
 
     private async void ConfirmClick(object? sender, RoutedEventArgs e) {
-        await using var db = new Database();
-        Client client = (DataContext as Client)!;
-        client.GenderId = client.Gender!.GenderId;
-        await db.UpdateAsync(client.ClientId, client);
+        _confirmAction.Invoke((DataContext as Client)!);
         Close();
     }
 }

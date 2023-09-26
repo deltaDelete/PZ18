@@ -19,6 +19,7 @@
                 <ComboBoxItem>Пол</ComboBoxItem>
             </ComboBox>
             <CheckBox IsChecked="{Binding IsSortByDescending}">Сортировка по убыванию</CheckBox>
+            <Button Content="Добавить" Command="{Binding NewItemCommand}" />
         </StackPanel>
         <DataGrid x:Name="DataGrid"
                   ItemsSource="{Binding Clients}"

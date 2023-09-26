@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -9,7 +10,10 @@ using PZ17.Models;
 namespace PZ18.ViewModels.dialogs; 
 
 public partial class EditProcedureDialog : Window {
-    public EditProcedureDialog(Procedure procedure) {
+    private Action<Procedure> _confirmAction;
+
+    public EditProcedureDialog(Procedure procedure, Action<Procedure> confirmAction) {
+        _confirmAction = confirmAction;
         InitializeComponent();
         DataContext = procedure;
     }
@@ -19,9 +23,7 @@ public partial class EditProcedureDialog : Window {
     }
 
     private async void ConfirmClick(object? sender, RoutedEventArgs e) {
-        await using var db = new Database();
-        Procedure procedure = (DataContext as Procedure)!;
-        await db.UpdateAsync(procedure.ProcedureId, procedure);
+        _confirmAction.Invoke((DataContext as Procedure)!);
         Close();
     }
 }

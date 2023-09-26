@@ -60,11 +60,13 @@ public class ClientsViewModel : ViewModelBase {
 
     public ICommand EditItemCommand { get; }
     public ICommand RemoveItemCommand { get; }
+    public ICommand NewItemCommand { get; }
 
     public ClientsViewModel(Window view) {
         _view = view;
         EditItemCommand = new AsyncCommand<Client>(EditItem);
         RemoveItemCommand = new AsyncCommand<Client>(RemoveItem);
+        NewItemCommand = new AsyncCommand(NewItem);
         GetDataFromDb();
         PropertyChanged += OnSearchChanged;
     }
@@ -140,7 +142,26 @@ public class ClientsViewModel : ViewModelBase {
 
     private async Task EditItem(Client? arg) {
         if (arg is null) return;
-        await new EditUserDialog(arg).ShowDialog(_view);
+        await new EditClientDialog(
+            arg, 
+            async client => {
+                await using var db = new Database();
+                client.GenderId = client.Gender!.GenderId;
+                await db.UpdateAsync(client.ClientId, client);
+            }
+            ).ShowDialog(_view);
+        GetDataFromDb();
+    }
+
+    private async Task NewItem() {
+        await new EditClientDialog(
+            new Client(),
+            async client => {
+                await using var db = new Database();
+                client.GenderId = client.Gender!.GenderId;
+                await db.InsertAsync(client);
+            }
+        ).ShowDialog(_view);
         GetDataFromDb();
     }
 }

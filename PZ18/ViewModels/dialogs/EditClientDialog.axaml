@@ -5,7 +5,7 @@
         xmlns:models="clr-namespace:PZ17.Models"
         WindowStartupLocation="CenterOwner"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="PZ18.ViewModels.dialogs.EditUserDialog"
+        x:Class="PZ18.ViewModels.dialogs.EditClientDialog"
         x:DataType="models:Client"
         Title="EditUserDialog">
     <StackPanel Orientation="Vertical" Spacing="15" HorizontalAlignment="Stretch" Margin="15">

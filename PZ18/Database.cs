@@ -232,7 +232,7 @@ public class Database : IDisposable, IAsyncDisposable {
         }
     }
 
-    public async void InsertAsync<T>(T obj) where T : new() {
+    public async Task InsertAsync<T>(T obj) where T : new() {
         var columns = GetColumns<T>()
             .Where(it => it.Property.GetCustomAttribute<KeyAttribute>() is null)
             .ToList();
