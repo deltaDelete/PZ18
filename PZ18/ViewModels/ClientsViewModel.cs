@@ -13,13 +13,15 @@ using PZ18.ViewModels.dialogs;
 
 namespace PZ17.ViewModels;
 
-public class ClientsWindowViewModel : ViewModelBase {
+public class ClientsViewModel : ViewModelBase {
     private readonly Window _view;
     private string _searchQuery = string.Empty;
     private ObservableCollection<Client> _clients = new();
     private List<Client> _clientsFull;
     private int _selectedSearchColumn;
     private bool _isSortByDescending = false;
+
+    #region Notifying Properties
 
     public int SelectedSearchColumn {
         get => _selectedSearchColumn;
@@ -35,6 +37,15 @@ public class ClientsWindowViewModel : ViewModelBase {
         get => _isSortByDescending;
         set => SetField(ref _isSortByDescending, value);
     }
+    
+    public string SearchQuery {
+        get => _searchQuery;
+        set {
+            if (value == _searchQuery) return;
+            _searchQuery = value;
+            RaisePropertyChanged();
+        }
+    }
 
     public ObservableCollection<Client> Clients {
         get => _clients;
@@ -45,44 +56,17 @@ public class ClientsWindowViewModel : ViewModelBase {
         }
     }
 
+    #endregion
+
     public ICommand EditItemCommand { get; }
     public ICommand RemoveItemCommand { get; }
 
-    public string SearchQuery {
-        get => _searchQuery;
-        set {
-            if (value == _searchQuery) return;
-            _searchQuery = value;
-            RaisePropertyChanged();
-        }
-    }
-
-    public ClientsWindowViewModel(Window view) {
+    public ClientsViewModel(Window view) {
         _view = view;
         EditItemCommand = new AsyncCommand<Client>(EditItem);
         RemoveItemCommand = new AsyncCommand<Client>(RemoveItem);
         GetDataFromDb();
         PropertyChanged += OnSearchChanged;
-    }
-
-    private async Task RemoveItem(Client? arg) {
-        if (arg is null) return;
-        new ConfirmationDialog(
-            "Вы собираетесь удалить строку",
-            $"Пользователь: {arg.LastName} {arg.FirstName}",
-            async dialog => {
-                await using var db = new Database();
-                await db.RemoveAsync(arg);
-                GetDataFromDb();
-            },
-            dialog => {}
-        ).ShowDialog(_view);
-    }
-
-    private async Task EditItem(Client? arg) {
-        if (arg is null) return;
-        await new EditUserDialog(arg).ShowDialog(_view);
-        GetDataFromDb();
     }
 
     private void OnSearchChanged(object? sender, PropertyChangedEventArgs e) {
@@ -102,13 +86,13 @@ public class ClientsWindowViewModel : ViewModelBase {
                 3 => _clientsFull
                     .Where(it => it.FirstName.ToLower().Contains(SearchQuery.ToLower())),
                 4 => _clientsFull
-                    .Where(it => it.Gender.Name.ToLower().Contains(SearchQuery.ToLower())),
+                    .Where(it => it.Gender!.Name.ToLower().Contains(SearchQuery.ToLower())),
                 _ => _clientsFull
                     .Where(it =>
                         it.LastName.ToLower().Contains(SearchQuery.ToLower()) ||
                         it.FirstName.ToLower().Contains(SearchQuery.ToLower()) ||
                         it.ClientId.ToString().Contains(SearchQuery) ||
-                        it.Gender.Name.ToLower().Contains(SearchQuery.ToLower())
+                        it.Gender!.Name.ToLower().Contains(SearchQuery.ToLower())
                     )
             };
 
@@ -120,8 +104,8 @@ public class ClientsWindowViewModel : ViewModelBase {
                 ? filtered.OrderByDescending(it => it.FirstName)
                 : filtered.OrderBy(it => it.FirstName)),
             4 => new(IsSortByDescending
-                ? filtered.OrderByDescending(it => it.Gender.Name)
-                : filtered.OrderBy(it => it.Gender.Name)),
+                ? filtered.OrderByDescending(it => it.Gender!.Name)
+                : filtered.OrderBy(it => it.Gender!.Name)),
             _ => new(IsSortByDescending
                 ? filtered.OrderByDescending(it => it.ClientId)
                 : filtered.OrderBy(it => it.ClientId))
@@ -138,5 +122,25 @@ public class ClientsWindowViewModel : ViewModelBase {
         }).ToList();
         _clientsFull = list;
         Clients = new ObservableCollection<Client>(_clientsFull);
+    }
+    
+    private async Task RemoveItem(Client? arg) {
+        if (arg is null) return;
+        new ConfirmationDialog(
+            "Вы собираетесь удалить строку",
+            $"Пользователь: {arg.LastName} {arg.FirstName}",
+            async dialog => {
+                await using var db = new Database();
+                await db.RemoveAsync(arg);
+                GetDataFromDb();
+            },
+            dialog => {}
+        ).ShowDialog(_view);
+    }
+
+    private async Task EditItem(Client? arg) {
+        if (arg is null) return;
+        await new EditUserDialog(arg).ShowDialog(_view);
+        GetDataFromDb();
     }
 }

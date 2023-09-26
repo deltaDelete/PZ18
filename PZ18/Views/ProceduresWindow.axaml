@@ -5,10 +5,20 @@
         xmlns:viewModels="clr-namespace:PZ17.ViewModels"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="PZ18.Views.ProceduresWindow"
-        x:DataType="viewModels:ProceduresWindowViewModel"
+        x:Name="Parent"
+        x:DataType="viewModels:ProceduresViewModel"
         Title="ProceduresWindow">
     <DockPanel LastChildFill="True">
-        <TextBox DockPanel.Dock="Top" Text="{Binding SearchQuery, Mode=TwoWay}"/>
+        <StackPanel Spacing="15" Orientation="Horizontal" DockPanel.Dock="Top" Margin="15">
+            <TextBox MinWidth="256" Text="{Binding SearchQuery, Mode=TwoWay}" />
+            <ComboBox SelectedIndex="{Binding SelectedSearchColumn}">
+                <ComboBoxItem>Все столбцы</ComboBoxItem>
+                <ComboBoxItem>Код</ComboBoxItem>
+                <ComboBoxItem>Наименование</ComboBoxItem>
+                <ComboBoxItem>Базовая цена</ComboBoxItem>
+            </ComboBox>
+            <CheckBox IsChecked="{Binding IsSortByDescending}">Сортировка по убыванию</CheckBox>
+        </StackPanel>
         <DataGrid x:Name="DataGrid"
                   ItemsSource="{Binding Procedures}"
                   AutoGenerateColumns="False"
@@ -18,6 +28,20 @@
                 <DataGridTextColumn Binding="{Binding ProcedureId}" Header="Код" />
                 <DataGridTextColumn Binding="{Binding ProcedureName}" Header="Наименование"/>
                 <DataGridTextColumn Binding="{Binding BasePrice}" Header="Базовая цена"/>
+                <DataGridTemplateColumn>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Content="Редактировать"
+                                        Command="{Binding ((viewModels:ProceduresViewModel)DataContext).EditItemCommand, ElementName=Parent}"
+                                        CommandParameter="{Binding}" />
+                                <Button Content="Удалить"
+                                        Command="{Binding ((viewModels:ProceduresViewModel)DataContext).RemoveItemCommand, ElementName=Parent}"
+                                        CommandParameter="{Binding}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
     </DockPanel>

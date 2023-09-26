@@ -8,6 +8,6 @@ namespace PZ18.Views;
 public partial class ProceduresWindow : Window {
     public ProceduresWindow() {
         InitializeComponent();
-        DataContext = new ProceduresWindowViewModel();
+        DataContext = new ProceduresViewModel(this);
     }
 }

@@ -8,6 +8,6 @@ namespace PZ18.Views;
 public partial class ClientsWindow : Window {
     public ClientsWindow() {
         InitializeComponent();
-        DataContext = new ClientsWindowViewModel(this);
+        DataContext = new ClientsViewModel(this);
     }
 }

@@ -20,9 +20,4 @@
         <PackageReference Include="MySqlConnector" Version="2.2.7" />
         <PackageReference Include="System.Linq.Async" Version="6.0.1" />
     </ItemGroup>
-
-
-    <ItemGroup>
-      <Folder Include="obj\Debug\net7.0\Avalonia\" />
-    </ItemGroup>
 </Project>
