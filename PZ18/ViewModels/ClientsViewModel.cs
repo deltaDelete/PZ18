@@ -160,8 +160,8 @@ public class ClientsViewModel : ViewModelBase {
                 await using var db = new Database();
                 client.GenderId = client.Gender!.GenderId;
                 await db.InsertAsync(client);
+                GetDataFromDb();
             }
         ).ShowDialog(_view);
-        GetDataFromDb();
     }
 }

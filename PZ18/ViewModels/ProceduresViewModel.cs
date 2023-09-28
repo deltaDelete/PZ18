@@ -146,8 +146,8 @@ public class ProceduresViewModel : ViewModelBase {
             async procedure => {
                 await using var db = new Database();
                 await db.InsertAsync(procedure);
+                GetDataFromDb();
             }
         ).ShowDialog(_view);
-        GetDataFromDb();
     }
 }

@@ -175,8 +175,8 @@ public class ProceduresClientsViewModel : ViewModelBase {
                 procedureClient.ProcedureId = procedureClient.Procedure!.ProcedureId;
                 procedureClient.ClientId = procedureClient.Client!.ClientId;
                 await db.InsertAsync(procedureClient);
+                GetDataFromDb();
             }
         ).ShowDialog(_view);
-        GetDataFromDb();
     }
 }
