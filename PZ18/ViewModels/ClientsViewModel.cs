@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Controls;
 using Microsoft.VisualBasic.CompilerServices;
+using MySqlConnector;
 using PZ17.Models;
 using PZ18.ViewModels.dialogs;
 
@@ -115,7 +116,7 @@ public class ClientsViewModel : ViewModelBase {
     }
 
     private async void GetDataFromDb() {
-        await using var db = new Database();
+        await using var db = new MyDatabase();
         var users = db.GetAsync<Client>();
         var list = await users.ToListAsync();
         list = list.Select(it => {
@@ -132,7 +133,7 @@ public class ClientsViewModel : ViewModelBase {
             "Вы собираетесь удалить строку",
             $"Пользователь: {arg.LastName} {arg.FirstName}",
             async dialog => {
-                await using var db = new Database();
+                await using var db = new MyDatabase();
                 await db.RemoveAsync(arg);
                 GetDataFromDb();
             },
@@ -145,7 +146,7 @@ public class ClientsViewModel : ViewModelBase {
         await new EditClientDialog(
             arg, 
             async client => {
-                await using var db = new Database();
+                await using var db = new MyDatabase();
                 client.GenderId = client.Gender!.GenderId;
                 await db.UpdateAsync(client.ClientId, client);
             }
@@ -157,7 +158,7 @@ public class ClientsViewModel : ViewModelBase {
         await new EditClientDialog(
             new Client(),
             async client => {
-                await using var db = new Database();
+                await using var db = new MyDatabase();
                 client.GenderId = client.Gender!.GenderId;
                 await db.InsertAsync(client);
                 GetDataFromDb();

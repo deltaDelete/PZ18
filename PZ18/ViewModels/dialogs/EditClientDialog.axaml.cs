@@ -20,7 +20,7 @@ public partial class EditClientDialog : Window {
     }
 
     private async void InitializeGenderBox() {
-        await using var db = new Database();
+        await using var db = new MyDatabase();
         GenderBox.ItemsSource = await db.GetAsync<Gender>().ToListAsync();
         GenderBox.SelectedIndex = (DataContext as Client)!.GenderId - 1;
     }

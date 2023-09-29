@@ -106,7 +106,7 @@ public class ProceduresViewModel : ViewModelBase {
     }
 
     private async void GetDataFromDb() {
-        await using var db = new Database();
+        await using var db = new MyDatabase();
         var users = db.GetAsync<Procedure>();
         var list = await users.ToListAsync();
         _proceduresFull = list;
@@ -119,7 +119,7 @@ public class ProceduresViewModel : ViewModelBase {
             "Вы собираетесь удалить строку",
             $"Процедура: {arg.ProcedureName}",
             async dialog => {
-                await using var db = new Database();
+                await using var db = new MyDatabase();
                 await db.RemoveAsync(arg);
                 GetDataFromDb();
             },
@@ -132,7 +132,7 @@ public class ProceduresViewModel : ViewModelBase {
         await new EditProcedureDialog(
             arg,
             async procedure => {
-                await using var db = new Database();
+                await using var db = new MyDatabase();
                 await db.UpdateAsync(procedure.ProcedureId, procedure);
             }
         ).ShowDialog(_view);
@@ -144,7 +144,7 @@ public class ProceduresViewModel : ViewModelBase {
         await new EditProcedureDialog(
             new Procedure(),
             async procedure => {
-                await using var db = new Database();
+                await using var db = new MyDatabase();
                 await db.InsertAsync(procedure);
                 GetDataFromDb();
             }

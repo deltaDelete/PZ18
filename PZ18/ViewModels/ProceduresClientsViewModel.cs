@@ -121,7 +121,7 @@ public class ProceduresClientsViewModel : ViewModelBase {
     }
 
     private async void GetDataFromDb() {
-        await using var db = new Database();
+        await using var db = new MyDatabase();
         var list = await db.GetAsync<ProcedureClient>().ToListAsync();
         list = list.Select(
             it =>
@@ -141,7 +141,7 @@ public class ProceduresClientsViewModel : ViewModelBase {
             "Вы собираетесь удалить процедуру",
             string.Empty,
             async dialog => {
-                await using var db = new Database();
+                await using var db = new MyDatabase();
                 await db.RemoveAsync(arg);
                 GetDataFromDb();
             },
@@ -155,7 +155,7 @@ public class ProceduresClientsViewModel : ViewModelBase {
         await new EditProcedureClientDialog(
             arg, 
             async procedureClient => {
-                await using var db = new Database();
+                await using var db = new MyDatabase();
                 procedureClient.ProcedureId = procedureClient.Procedure!.ProcedureId;
                 procedureClient.ClientId = procedureClient.Client!.ClientId;
                 await db.UpdateAsync(procedureClient.ProcedureId, procedureClient);
@@ -171,7 +171,7 @@ public class ProceduresClientsViewModel : ViewModelBase {
                 ProcedureId = 1
             },
             async procedureClient => {
-                await using var db = new Database();
+                await using var db = new MyDatabase();
                 procedureClient.ProcedureId = procedureClient.Procedure!.ProcedureId;
                 procedureClient.ClientId = procedureClient.Client!.ClientId;
                 await db.InsertAsync(procedureClient);

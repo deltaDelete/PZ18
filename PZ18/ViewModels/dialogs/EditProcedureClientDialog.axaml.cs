@@ -20,7 +20,7 @@ public partial class EditProcedureClientDialog : Window {
     }
 
     private async void InitializeBoxes() {
-        await using var db = new Database();
+        await using var db = new MyDatabase();
         ProcedureBox.ItemsSource = await db.GetAsync<Procedure>().ToListAsync();
         ProcedureBox.SelectedIndex = (DataContext as ProcedureClient).ProcedureId - 1;
         ClientBox.ItemsSource = await db.GetAsync<Client>().ToListAsync();
