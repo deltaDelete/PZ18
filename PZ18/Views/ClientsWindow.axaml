@@ -4,12 +4,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:PZ17.ViewModels"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        MinWidth="800"
+        MinHeight="450"
         x:Class="PZ18.Views.ClientsWindow"
-        x:DataType="viewModels:ClientsWindowViewModel"
-        Title="ClientsWindow">
+        x:Name="Parent"
+        x:DataType="viewModels:ClientsViewModel"
+        Title="Клиенты">
     <DockPanel LastChildFill="True">
-        <StackPanel Spacing="15" Orientation="Horizontal" DockPanel.Dock="Top">
-            <TextBox MinWidth="256" Text="{Binding SearchQuery, Mode=TwoWay}"/>
+        <StackPanel Spacing="5" Orientation="Horizontal" DockPanel.Dock="Top" Margin="15">
+            <TextBox MinWidth="256" Text="{Binding SearchQuery, Mode=TwoWay}" />
             <ComboBox SelectedIndex="{Binding SelectedSearchColumn}">
                 <ComboBoxItem>Все столбцы</ComboBoxItem>
                 <ComboBoxItem>Код</ComboBoxItem>
@@ -18,6 +21,13 @@
                 <ComboBoxItem>Пол</ComboBoxItem>
             </ComboBox>
             <CheckBox IsChecked="{Binding IsSortByDescending}">Сортировка по убыванию</CheckBox>
+            <Button Content="Добавить" Command="{Binding NewItemCommand}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="5" DockPanel.Dock="Bottom" HorizontalAlignment="Center" Margin="10">
+            <Button Content="В начало" Command="{Binding TakeFirstCommand}"/>
+            <Button Content="Назад" Command="{Binding TakePrevCommand}"/>
+            <Button Content="Вперед" Command="{Binding TakeNextCommand}"/>
+            <Button Content="В конец" Command="{Binding TakeLastCommand}"/>
         </StackPanel>
         <DataGrid x:Name="DataGrid"
                   ItemsSource="{Binding Clients}"
@@ -25,10 +35,24 @@
                   IsReadOnly="True"
                   GridLinesVisibility="All">
             <DataGrid.Columns>
-                <DataGridTextColumn Binding="{Binding ClientId}" Header="Код"/>
-                <DataGridTextColumn Binding="{Binding LastName}" Header="Фамилия"/>
-                <DataGridTextColumn Binding="{Binding FirstName}" Header="Имя"/>
-                <DataGridTextColumn Binding="{Binding Gender.Name}" Header="Пол"/>
+                <DataGridTextColumn Binding="{Binding ClientId}" Header="Код" />
+                <DataGridTextColumn Binding="{Binding LastName}" Header="Фамилия" />
+                <DataGridTextColumn Binding="{Binding FirstName}" Header="Имя" />
+                <DataGridTextColumn Binding="{Binding Gender.Name}" Header="Пол" />
+                <DataGridTemplateColumn>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Content="Редактировать"
+                                        Command="{Binding ((viewModels:ClientsViewModel)DataContext).EditItemCommand, ElementName=Parent}"
+                                        CommandParameter="{Binding}" />
+                                <Button Content="Удалить"
+                                        Command="{Binding ((viewModels:ClientsViewModel)DataContext).RemoveItemCommand, ElementName=Parent}"
+                                        CommandParameter="{Binding}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
     </DockPanel>
