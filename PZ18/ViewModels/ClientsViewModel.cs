@@ -70,7 +70,14 @@ public class ClientsViewModel : ViewModelBase {
             if (value >= _clientsFull.Count) {
                 return;
             }
-            SetField(ref _skip, value);
+
+            if (!SetField(ref _skip, value)) {
+                return;
+            };
+            TakeFirstCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
+            TakePrevCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
+            TakeNextCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
+            TakeLastCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
         }
     }
 
@@ -79,22 +86,21 @@ public class ClientsViewModel : ViewModelBase {
     public ICommand EditItemCommand { get; }
     public ICommand RemoveItemCommand { get; }
     public ICommand NewItemCommand { get; }
-    public ICommand TakeNextCommand { get; }
-    public ICommand TakePrevCommand { get; }
-    public ICommand TakeFirstCommand { get; }
-    public ICommand TakeLastCommand { get; }
+    public Command TakeNextCommand { get; }
+    public Command TakePrevCommand { get; }
+    public Command TakeFirstCommand { get; }
+    public Command TakeLastCommand { get; }
 
     public ClientsViewModel(Window view) {
         _view = view;
         EditItemCommand = new AsyncCommand<Client>(EditItem);
         RemoveItemCommand = new AsyncCommand<Client>(RemoveItem);
         NewItemCommand = new AsyncCommand(NewItem);
-        TakeNextCommand = new Command(TakeNext, () => Skip + Take <= _clientsFull?.Count);
+        // TODO ПРОРАБОТАТЬ УСЛОВИЯ
+        TakeNextCommand = new Command(TakeNext, () => Skip + Take < _clientsFull?.Count);
         TakePrevCommand = new Command(TakePrev, () => Skip >= Take);
-        TakeFirstCommand = new Command(TakeFirst, () => Skip > Take);
-        TakeLastCommand = new Command(TakeLast, () => Skip < Take);
-        // TODO NOTIFY COMMANDS WHEN SKIP IS CHANGED
-        // Take
+        TakeFirstCommand = new Command(TakeFirst, () => Skip - Take >= 0);
+        TakeLastCommand = new Command(TakeLast, () => _clientsFull?.Count - Skip - Take > 0);
         GetDataFromDb();
         PropertyChanged += OnSearchChanged;
     }
@@ -215,7 +221,7 @@ public class ClientsViewModel : ViewModelBase {
     }
     
     private void TakeLast() {
-        Skip = 0;
+        Skip = _clientsFull.Count - Take;
         Clients = new ObservableCollection<Client>(
             _clientsFull.TakeLast(Take)
         );
