@@ -20,6 +20,14 @@ public class Command<T> : ICommand {
     }
 
     public event EventHandler? CanExecuteChanged;
+
+    public void RaiseCanExecuteChanged(object? sender, EventArgs e) {
+        CanExecuteChanged?.Invoke(sender, e);
+    }
+    
+    public void RaiseCanExecuteChanged() {
+        CanExecuteChanged?.Invoke(null, EventArgs.Empty);
+    }
 }
 
 public class Command : ICommand {
@@ -39,4 +47,12 @@ public class Command : ICommand {
     }
 
     public event EventHandler? CanExecuteChanged;
+
+    public void RaiseCanExecuteChanged(object? sender, EventArgs e) {
+        CanExecuteChanged?.Invoke(sender, e);
+    }
+    
+    public void RaiseCanExecuteChanged() {
+        CanExecuteChanged?.Invoke(null, EventArgs.Empty);
+    }
 }
