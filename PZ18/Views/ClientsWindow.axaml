@@ -11,7 +11,7 @@
         x:DataType="viewModels:ClientsViewModel"
         Title="Клиенты">
     <DockPanel LastChildFill="True">
-        <StackPanel Spacing="15" Orientation="Horizontal" DockPanel.Dock="Top" Margin="15">
+        <StackPanel Spacing="5" Orientation="Horizontal" DockPanel.Dock="Top" Margin="15">
             <TextBox MinWidth="256" Text="{Binding SearchQuery, Mode=TwoWay}" />
             <ComboBox SelectedIndex="{Binding SelectedSearchColumn}">
                 <ComboBoxItem>Все столбцы</ComboBoxItem>
@@ -22,6 +22,12 @@
             </ComboBox>
             <CheckBox IsChecked="{Binding IsSortByDescending}">Сортировка по убыванию</CheckBox>
             <Button Content="Добавить" Command="{Binding NewItemCommand}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="5" DockPanel.Dock="Bottom" HorizontalAlignment="Center" Margin="10">
+            <Button Content="В начало" Command="{Binding TakeFirstCommand}"/>
+            <Button Content="Назад" Command="{Binding TakePrevCommand}"/>
+            <Button Content="Вперед" Command="{Binding TakeNextCommand}"/>
+            <Button Content="В конец" Command="{Binding TakeLastCommand}"/>
         </StackPanel>
         <DataGrid x:Name="DataGrid"
                   ItemsSource="{Binding Clients}"

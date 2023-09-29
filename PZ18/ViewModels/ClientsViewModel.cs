@@ -21,6 +21,8 @@ public class ClientsViewModel : ViewModelBase {
     private List<Client> _clientsFull;
     private int _selectedSearchColumn;
     private bool _isSortByDescending = false;
+    private int _take = 10;
+    private int _skip = 0;
 
     #region Notifying Properties
 
@@ -38,7 +40,7 @@ public class ClientsViewModel : ViewModelBase {
         get => _isSortByDescending;
         set => SetField(ref _isSortByDescending, value);
     }
-    
+
     public string SearchQuery {
         get => _searchQuery;
         set {
@@ -57,17 +59,42 @@ public class ClientsViewModel : ViewModelBase {
         }
     }
 
+    public int Take {
+        get => _take;
+        set => SetField(ref _take, value);
+    }
+
+    public int Skip {
+        get => _skip;
+        set {
+            if (value >= _clientsFull.Count) {
+                return;
+            }
+            SetField(ref _skip, value);
+        }
+    }
+
     #endregion
 
     public ICommand EditItemCommand { get; }
     public ICommand RemoveItemCommand { get; }
     public ICommand NewItemCommand { get; }
+    public ICommand TakeNextCommand { get; }
+    public ICommand TakePrevCommand { get; }
+    public ICommand TakeFirstCommand { get; }
+    public ICommand TakeLastCommand { get; }
 
     public ClientsViewModel(Window view) {
         _view = view;
         EditItemCommand = new AsyncCommand<Client>(EditItem);
         RemoveItemCommand = new AsyncCommand<Client>(RemoveItem);
         NewItemCommand = new AsyncCommand(NewItem);
+        TakeNextCommand = new Command(TakeNext, () => Skip + Take <= _clientsFull?.Count);
+        TakePrevCommand = new Command(TakePrev, () => Skip >= Take);
+        TakeFirstCommand = new Command(TakeFirst, () => Skip > Take);
+        TakeLastCommand = new Command(TakeLast, () => Skip < Take);
+        // TODO NOTIFY COMMANDS WHEN SKIP IS CHANGED
+        // Take
         GetDataFromDb();
         PropertyChanged += OnSearchChanged;
     }
@@ -124,9 +151,9 @@ public class ClientsViewModel : ViewModelBase {
             return it;
         }).ToList();
         _clientsFull = list;
-        Clients = new ObservableCollection<Client>(_clientsFull);
+        TakeFirst();
     }
-    
+
     private async Task RemoveItem(Client? arg) {
         if (arg is null) return;
         new ConfirmationDialog(
@@ -137,20 +164,20 @@ public class ClientsViewModel : ViewModelBase {
                 await db.RemoveAsync(arg);
                 GetDataFromDb();
             },
-            dialog => {}
+            dialog => { }
         ).ShowDialog(_view);
     }
 
     private async Task EditItem(Client? arg) {
         if (arg is null) return;
         await new EditClientDialog(
-            arg, 
+            arg,
             async client => {
                 await using var db = new MyDatabase();
                 client.GenderId = client.Gender!.GenderId;
                 await db.UpdateAsync(client.ClientId, client);
             }
-            ).ShowDialog(_view);
+        ).ShowDialog(_view);
         GetDataFromDb();
     }
 
@@ -164,5 +191,33 @@ public class ClientsViewModel : ViewModelBase {
                 GetDataFromDb();
             }
         ).ShowDialog(_view);
+    }
+
+    private void TakeNext() {
+        Skip += Take;
+        Clients = new ObservableCollection<Client>(
+            _clientsFull.Skip(Skip).Take(Take)
+        );
+    }
+
+    private void TakePrev() {
+        Skip -= Take;
+        Clients = new ObservableCollection<Client>(
+            _clientsFull.Skip(Skip).Take(Take)
+        );
+    }
+
+    private void TakeFirst() {
+        Skip = 0;
+        Clients = new ObservableCollection<Client>(
+            _clientsFull.Take(Take)
+        );
+    }
+    
+    private void TakeLast() {
+        Skip = 0;
+        Clients = new ObservableCollection<Client>(
+            _clientsFull.TakeLast(Take)
+        );
     }
 }
