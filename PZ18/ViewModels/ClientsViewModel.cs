@@ -3,12 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Controls;
-using Microsoft.VisualBasic.CompilerServices;
-using MySqlConnector;
 using PZ17.Models;
 using PZ18.ViewModels.dialogs;
 
@@ -23,6 +20,8 @@ public class ClientsViewModel : ViewModelBase {
     private bool _isSortByDescending = false;
     private int _take = 10;
     private int _skip = 0;
+    private int _currentPage;
+    private List<Client> _filtered;
 
     #region Notifying Properties
 
@@ -74,10 +73,33 @@ public class ClientsViewModel : ViewModelBase {
             if (!SetField(ref _skip, value)) {
                 return;
             };
+
+            CurrentPage = (int)Math.Ceiling(value / (double)Take);
+        }
+    }
+
+    public int CurrentPage {
+        get => _currentPage;
+        set {
+            if (!SetField(ref _currentPage, value)) {
+                 return;   
+            }
+            
             TakeFirstCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
             TakePrevCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
             TakeNextCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
             TakeLastCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
+        }
+    }
+
+    public int TotalPages => (int)Math.Ceiling(Filtered.Count / (double)Take);
+
+    public List<Client> Filtered {
+        get => _filtered;
+        set {
+            if (SetField(ref _filtered, value)) {
+                TakeFirst();
+            }
         }
     }
 
@@ -97,10 +119,10 @@ public class ClientsViewModel : ViewModelBase {
         RemoveItemCommand = new AsyncCommand<Client>(RemoveItem);
         NewItemCommand = new AsyncCommand(NewItem);
         // TODO ПРОРАБОТАТЬ УСЛОВИЯ
-        TakeNextCommand = new Command(TakeNext, () => Skip + Take < _clientsFull?.Count);
-        TakePrevCommand = new Command(TakePrev, () => Skip >= Take);
-        TakeFirstCommand = new Command(TakeFirst, () => Skip - Take >= 0);
-        TakeLastCommand = new Command(TakeLast, () => _clientsFull?.Count - Skip - Take > 0);
+        TakeNextCommand = new Command(TakeNext, () => CurrentPage + 1 < TotalPages);
+        TakePrevCommand = new Command(TakePrev, () => CurrentPage + 1 > 1);
+        TakeFirstCommand = new Command(TakeFirst, () => CurrentPage + 1 > 1);
+        TakeLastCommand = new Command(TakeLast, () => CurrentPage + 1 < TotalPages);
         GetDataFromDb();
         PropertyChanged += OnSearchChanged;
     }
@@ -132,19 +154,19 @@ public class ClientsViewModel : ViewModelBase {
                     )
             };
 
-        Clients = SelectedSearchColumn switch {
-            2 => new(IsSortByDescending
-                ? filtered.OrderByDescending(it => it.LastName)
-                : filtered.OrderBy(it => it.LastName)),
-            3 => new(IsSortByDescending
-                ? filtered.OrderByDescending(it => it.FirstName)
-                : filtered.OrderBy(it => it.FirstName)),
-            4 => new(IsSortByDescending
-                ? filtered.OrderByDescending(it => it.Gender!.Name)
-                : filtered.OrderBy(it => it.Gender!.Name)),
-            _ => new(IsSortByDescending
-                ? filtered.OrderByDescending(it => it.ClientId)
-                : filtered.OrderBy(it => it.ClientId))
+        Filtered = SelectedSearchColumn switch {
+            2 => IsSortByDescending
+                ? filtered.OrderByDescending(it => it.LastName).ToList()
+                : filtered.OrderBy(it => it.LastName).ToList(),
+            3 => IsSortByDescending
+                ? filtered.OrderByDescending(it => it.FirstName).ToList()
+                : filtered.OrderBy(it => it.FirstName).ToList(),
+            4 => IsSortByDescending
+                ? filtered.OrderByDescending(it => it.Gender!.Name).ToList()
+                : filtered.OrderBy(it => it.Gender!.Name).ToList(),
+            _ => IsSortByDescending
+                ? filtered.OrderByDescending(it => it.ClientId).ToList()
+                : filtered.OrderBy(it => it.ClientId).ToList()
         };
     }
 
@@ -157,7 +179,7 @@ public class ClientsViewModel : ViewModelBase {
             return it;
         }).ToList();
         _clientsFull = list;
-        TakeFirst();
+        Filtered = _clientsFull;
     }
 
     private async Task RemoveItem(Client? arg) {
@@ -202,28 +224,28 @@ public class ClientsViewModel : ViewModelBase {
     private void TakeNext() {
         Skip += Take;
         Clients = new ObservableCollection<Client>(
-            _clientsFull.Skip(Skip).Take(Take)
+            Filtered.Skip(Skip).Take(Take)
         );
     }
 
     private void TakePrev() {
         Skip -= Take;
         Clients = new ObservableCollection<Client>(
-            _clientsFull.Skip(Skip).Take(Take)
+            Filtered.Skip(Skip).Take(Take)
         );
     }
 
     private void TakeFirst() {
         Skip = 0;
         Clients = new ObservableCollection<Client>(
-            _clientsFull.Take(Take)
+            Filtered.Take(Take)
         );
     }
     
     private void TakeLast() {
-        Skip = _clientsFull.Count - Take;
+        Skip = Filtered.Count - Take;
         Clients = new ObservableCollection<Client>(
-            _clientsFull.TakeLast(Take)
+            Filtered.TakeLast(Take)
         );
     }
 }
