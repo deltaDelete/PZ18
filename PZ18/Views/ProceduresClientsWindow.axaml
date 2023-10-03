@@ -24,8 +24,15 @@
             <CheckBox IsChecked="{Binding IsSortByDescending}">Сортировка по убыванию</CheckBox>
             <Button Content="Добавить" Command="{Binding NewItemCommand}" />
         </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="5" DockPanel.Dock="Bottom" HorizontalAlignment="Center"
+                    Margin="10">
+            <Button Content="В начало" Command="{Binding TakeFirstCommand}" />
+            <Button Content="Назад" Command="{Binding TakePrevCommand}" />
+            <Button Content="Вперед" Command="{Binding TakeNextCommand}" />
+            <Button Content="В конец" Command="{Binding TakeLastCommand}" />
+        </StackPanel>
         <DataGrid x:Name="DataGrid"
-                  ItemsSource="{Binding ProceduresClients}"
+                  ItemsSource="{Binding Items}"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
                   GridLinesVisibility="All">
@@ -42,11 +49,11 @@
                 <DataGridTextColumn Binding="{Binding ProcedureId}" Header="Код процедуры"/>
                 <DataGridTextColumn Binding="{Binding Procedure.ProcedureName}" Header="Процедура"/>
                 <DataGridTextColumn Binding="{Binding Date}" Header="Дата"/>
-                <DataGridTextColumn Binding="{Binding Price}" Header="Стоимость"/>
+                <DataGridTextColumn Binding="{Binding Price, StringFormat={}{0:0.00}}" Header="Стоимость"/>
                 <DataGridTemplateColumn>
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="8" HorizontalAlignment="Center">
                                 <Button Content="Редактировать"
                                         Command="{Binding ((viewModels:ProceduresClientsViewModel)DataContext).EditItemCommand, ElementName=Parent}"
                                         CommandParameter="{Binding}" />

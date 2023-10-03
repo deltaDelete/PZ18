@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -13,11 +14,15 @@ namespace PZ17.ViewModels;
 
 public class ProceduresClientsViewModel : ViewModelBase {
     private readonly Window _view;
-    private ObservableCollection<ProcedureClient> _proceduresClients = new();
     private string _searchQuery = string.Empty;
-    private List<ProcedureClient> _proceduresClientsFull;
+    private ObservableCollection<ProcedureClient> _items = new();
+    private List<ProcedureClient> _itemsFull;
     private int _selectedSearchColumn;
     private bool _isSortByDescending = false;
+    private int _take = 10;
+    private int _skip = 0;
+    private int _currentPage;
+    private List<ProcedureClient> _filtered;
 
     #region Notifying Properties
 
@@ -36,13 +41,13 @@ public class ProceduresClientsViewModel : ViewModelBase {
         set => SetField(ref _isSortByDescending, value);
     }
     
-    public ObservableCollection<ProcedureClient> ProceduresClients
+    public ObservableCollection<ProcedureClient> Items
     {
-        get => _proceduresClients;
+        get => _items;
         set
         {
-            if (Equals(value, _proceduresClients)) return;
-            _proceduresClients = value;
+            if (Equals(value, _items)) return;
+            _items = value;
             RaisePropertyChanged();
         }
     }
@@ -56,17 +61,70 @@ public class ProceduresClientsViewModel : ViewModelBase {
         }
     }
 
+    public int Take {
+        get => _take;
+        set => SetField(ref _take, value);
+    }
+
+    public int Skip {
+        get => _skip;
+        set {
+            if (value >= _itemsFull.Count) {
+                return;
+            }
+
+            if (!SetField(ref _skip, value)) {
+                return;
+            };
+
+            CurrentPage = (int)Math.Ceiling(value / (double)Take);
+        }
+    }
+
+    public int CurrentPage {
+        get => _currentPage;
+        set {
+            if (!SetField(ref _currentPage, value)) {
+                return;   
+            }
+            
+            TakeFirstCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
+            TakePrevCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
+            TakeNextCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
+            TakeLastCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
+        }
+    }
+
+    public int TotalPages => (int)Math.Ceiling(Filtered.Count / (double)Take);
+
+    public List<ProcedureClient> Filtered {
+        get => _filtered;
+        set {
+            if (SetField(ref _filtered, value)) {
+                TakeFirst();
+            }
+        }
+    }
+
     #endregion
 
     public ICommand EditItemCommand { get; }
     public ICommand RemoveItemCommand { get; }
     public ICommand NewItemCommand { get; }
+    public Command TakeNextCommand { get; }
+    public Command TakePrevCommand { get; }
+    public Command TakeFirstCommand { get; }
+    public Command TakeLastCommand { get; }
     
     public ProceduresClientsViewModel(Window view) {
         _view = view;
         EditItemCommand = new AsyncCommand<ProcedureClient>(EditItem);
         RemoveItemCommand = new AsyncCommand<ProcedureClient>(RemoveItem);
         NewItemCommand = new AsyncCommand(NewItem);
+        TakeNextCommand = new Command(TakeNext, () => CurrentPage + 1 < TotalPages);
+        TakePrevCommand = new Command(TakePrev, () => CurrentPage + 1 > 1);
+        TakeFirstCommand = new Command(TakeFirst, () => CurrentPage + 1 > 1);
+        TakeLastCommand = new Command(TakeLast, () => CurrentPage + 1 < TotalPages);
         GetDataFromDb();
         PropertyChanged += OnSearchChanged;
     }
@@ -79,19 +137,19 @@ public class ProceduresClientsViewModel : ViewModelBase {
         }
 
         var filtered = SearchQuery == ""
-            ? new ObservableCollection<ProcedureClient>(_proceduresClientsFull)
+            ? new ObservableCollection<ProcedureClient>(_itemsFull)
             : SelectedSearchColumn switch {
-                1 => _proceduresClientsFull
+                1 => _itemsFull
                     .Where(it => it.Id.ToString().Contains(SearchQuery)),
-                2 => _proceduresClientsFull
+                2 => _itemsFull
                     .Where(it => $"{it.Client.LastName} {it.Client.FirstName}".ToLower().Contains(SearchQuery.ToLower())),
-                3 => _proceduresClientsFull
+                3 => _itemsFull
                     .Where(it => it.Procedure.ProcedureName.ToLower().Contains(SearchQuery.ToLower())),
-                4 => _proceduresClientsFull
+                4 => _itemsFull
                     .Where(it => it.Date.ToString(CultureInfo.InvariantCulture).Contains(SearchQuery.ToLower())),
-                5 => _proceduresClientsFull
+                5 => _itemsFull
                     .Where(it => it.Price.ToString(CultureInfo.InvariantCulture).Contains(SearchQuery.ToLower())),
-                _ => _proceduresClientsFull
+                _ => _itemsFull
                     .Where(it =>
                         it.Procedure.ProcedureName.ToLower().Contains(SearchQuery.ToLower()) ||
                         it.Date.ToString(CultureInfo.InvariantCulture).Contains(SearchQuery.ToLower()) ||
@@ -101,22 +159,22 @@ public class ProceduresClientsViewModel : ViewModelBase {
                     )
             };
 
-        ProceduresClients = SelectedSearchColumn switch {
-            2 => new(IsSortByDescending
-                ? filtered.OrderByDescending(it => $"{it.Client.LastName} {it.Client.FirstName}")
-                : filtered.OrderBy(it => $"{it.Client.LastName} {it.Client.FirstName}")),
-            3 => new(IsSortByDescending
-                ? filtered.OrderByDescending(it => it.Procedure.ProcedureName)
-                : filtered.OrderBy(it => it.Procedure.ProcedureName)),
-            4 => new(IsSortByDescending
-                ? filtered.OrderByDescending(it => it.Date)
-                : filtered.OrderBy(it => it.Date)),
-            5 => new(IsSortByDescending
-                ? filtered.OrderByDescending(it => it.Price)
-                : filtered.OrderBy(it => it.Price)),
-            _ => new(IsSortByDescending
-                ? filtered.OrderByDescending(it => it.Id)
-                : filtered.OrderBy(it => it.Id))
+        Filtered = SelectedSearchColumn switch {
+            2 => IsSortByDescending
+                ? filtered.OrderByDescending(it => $"{it.Client.LastName} {it.Client.FirstName}").ToList()
+                : filtered.OrderBy(it => $"{it.Client.LastName} {it.Client.FirstName}").ToList(),
+            3 => IsSortByDescending
+                ? filtered.OrderByDescending(it => it.Procedure.ProcedureName).ToList()
+                : filtered.OrderBy(it => it.Procedure.ProcedureName).ToList(),
+            4 => IsSortByDescending
+                ? filtered.OrderByDescending(it => it.Date).ToList()
+                : filtered.OrderBy(it => it.Date).ToList(),
+            5 => IsSortByDescending
+                ? filtered.OrderByDescending(it => it.Price).ToList()
+                : filtered.OrderBy(it => it.Price).ToList(),
+            _ => IsSortByDescending
+                ? filtered.OrderByDescending(it => it.Id).ToList()
+                : filtered.OrderBy(it => it.Id).ToList()
         };
     }
 
@@ -131,8 +189,8 @@ public class ProceduresClientsViewModel : ViewModelBase {
                 return it;
             }
         ).ToList();
-        _proceduresClientsFull = list;
-        ProceduresClients = new ObservableCollection<ProcedureClient>(list);
+        _itemsFull = list;
+        Filtered = _itemsFull;
     }
     
     private async Task RemoveItem(ProcedureClient? arg) {
@@ -147,7 +205,6 @@ public class ProceduresClientsViewModel : ViewModelBase {
             },
             dialog => {}
         ).ShowDialog(_view);
-        GetDataFromDb();
     }
 
     private async Task EditItem(ProcedureClient? arg) {
@@ -159,9 +216,9 @@ public class ProceduresClientsViewModel : ViewModelBase {
                 procedureClient.ProcedureId = procedureClient.Procedure!.ProcedureId;
                 procedureClient.ClientId = procedureClient.Client!.ClientId;
                 await db.UpdateAsync(procedureClient.ProcedureId, procedureClient);
+                GetDataFromDb();
             }
         ).ShowDialog(_view);
-        GetDataFromDb();
     }
 
     private async Task NewItem() {
@@ -178,5 +235,33 @@ public class ProceduresClientsViewModel : ViewModelBase {
                 GetDataFromDb();
             }
         ).ShowDialog(_view);
+    }
+    
+    private void TakeNext() {
+        Skip += Take;
+        Items = new ObservableCollection<ProcedureClient>(
+            Filtered.Skip(Skip).Take(Take)
+        );
+    }
+
+    private void TakePrev() {
+        Skip -= Take;
+        Items = new ObservableCollection<ProcedureClient>(
+            Filtered.Skip(Skip).Take(Take)
+        );
+    }
+
+    private void TakeFirst() {
+        Skip = 0;
+        Items = new ObservableCollection<ProcedureClient>(
+            Filtered.Take(Take)
+        );
+    }
+    
+    private void TakeLast() {
+        Skip = Filtered.Count - Take;
+        Items = new ObservableCollection<ProcedureClient>(
+            Filtered.TakeLast(Take)
+        );
     }
 }
