@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace PZ17.ViewModels;
+namespace PZ18.ViewModels;
 
 public class AsyncCommand<T> : ICommand {
     private bool _busy;

@@ -2,10 +2,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:models="clr-namespace:PZ17.Models"
+        xmlns:models="clr-namespace:PZ18.Models"
         WindowStartupLocation="CenterOwner"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="PZ18.ViewModels.dialogs.EditClientDialog"
+        x:Class="PZ18.Views.Dialogs.EditClientDialog"
         x:DataType="models:Client"
         Title="EditUserDialog">
     <StackPanel Orientation="Vertical" Spacing="15" HorizontalAlignment="Stretch" Margin="15">

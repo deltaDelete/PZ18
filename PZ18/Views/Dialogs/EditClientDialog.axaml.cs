@@ -1,13 +1,10 @@
 using System;
 using System.Linq;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
-using PZ17;
-using PZ17.Models;
+using PZ18.Models;
 
-namespace PZ18.ViewModels.dialogs; 
+namespace PZ18.Views.Dialogs; 
 
 public partial class EditClientDialog : Window {
     private readonly Action<Client> _confirmAction;

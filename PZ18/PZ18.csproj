@@ -23,8 +23,40 @@
 
 
     <ItemGroup>
-      <Compile Update="ViewModels\dialogs\EditProcedureClientDialog.axaml.cs">
+      <Compile Update="Views\dialogs\ConfirmationDialog.axaml.cs">
+        <DependentUpon>ConfirmationDialog.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\dialogs\EditClientDialog.axaml.cs">
+        <DependentUpon>EditClientDialog.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\dialogs\EditProcedureClientDialog.axaml.cs">
         <DependentUpon>EditProcedureClientDialog.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\dialogs\EditProcedureDialog.axaml.cs">
+        <DependentUpon>EditProcedureDialog.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\dialogs\ConfirmationDialog.axaml.cs">
+        <DependentUpon>ConfirmationDialog.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\dialogs\EditClientDialog.axaml.cs">
+        <DependentUpon>EditClientDialog.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\dialogs\EditProcedureClientDialog.axaml.cs">
+        <DependentUpon>EditProcedureClientDialog.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\dialogs\EditProcedureDialog.axaml.cs">
+        <DependentUpon>EditProcedureDialog.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\dialogs\GenericDialog.axaml.cs">
+        <DependentUpon>GenericDialog.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
     </ItemGroup>
@@ -32,5 +64,14 @@
 
     <ItemGroup>
       <ProjectReference Include="..\DbTools\DbTools\DbTools.csproj" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <AdditionalFiles Include="Views\Dialogs\ConfirmationDialog.axaml" />
+      <AdditionalFiles Include="Views\Dialogs\EditClientDialog.axaml" />
+      <AdditionalFiles Include="Views\Dialogs\EditProcedureClientDialog.axaml" />
+      <AdditionalFiles Include="Views\Dialogs\EditProcedureDialog.axaml" />
+      <AdditionalFiles Include="Views\Dialogs\GenericDialog.axaml" />
     </ItemGroup>
 </Project>

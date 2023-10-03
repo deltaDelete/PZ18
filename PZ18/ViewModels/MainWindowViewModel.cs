@@ -1,13 +1,6 @@
-using System.Collections.ObjectModel;
-using System.Linq;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
-using PZ17.Models;
-using PZ18;
 using PZ18.Views;
 
-namespace PZ17.ViewModels;
+namespace PZ18.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase {
     public Command OpenClientsCommand { get; }

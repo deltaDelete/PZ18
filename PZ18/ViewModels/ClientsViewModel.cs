@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Threading;
-using PZ17.Models;
-using PZ18.ViewModels.dialogs;
+using PZ18.Models;
+using PZ18.Views.Dialogs;
 
-namespace PZ17.ViewModels;
+namespace PZ18.ViewModels;
 
 public class ClientsViewModel : ViewModelBase {
     private readonly Window _view;

@@ -1,8 +1,8 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using Bogus;
-using PZ17;
-using PZ17.Models;
+using PZ18;
+using PZ18.Models;
 
 await using var db = new MyDatabase();
 

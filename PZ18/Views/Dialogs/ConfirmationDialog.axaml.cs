@@ -1,10 +1,8 @@
 using System;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 
-namespace PZ18.ViewModels.dialogs; 
+namespace PZ18.Views.Dialogs; 
 
 public partial class ConfirmationDialog : Window {
     private readonly Action<ConfirmationDialog> _positiveClick;

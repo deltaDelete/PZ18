@@ -1,11 +1,10 @@
 using System;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using DbTools;
 using MySqlConnector;
 
-namespace PZ17.Models; 
+namespace PZ18.Models; 
 
 [Table("procedures_clients")]
 public class ProcedureClient {

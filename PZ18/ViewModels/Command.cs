@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Input;
 
-namespace PZ17.ViewModels;
+namespace PZ18.ViewModels;
 
 public class Command<T> : ICommand {
     private readonly Action<T?> _action;

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace PZ17.ViewModels;
+namespace PZ18.ViewModels;
 
 public class ViewModelBase : INotifyPropertyChanged, INotifyPropertyChanging {
     public event PropertyChangedEventHandler? PropertyChanged;
