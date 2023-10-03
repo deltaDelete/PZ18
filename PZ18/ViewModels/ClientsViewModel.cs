@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using PZ17.Models;
 using PZ18.ViewModels.dialogs;
 
@@ -14,14 +15,15 @@ namespace PZ17.ViewModels;
 public class ClientsViewModel : ViewModelBase {
     private readonly Window _view;
     private string _searchQuery = string.Empty;
-    private ObservableCollection<Client> _clients = new();
-    private List<Client> _clientsFull;
+    private ObservableCollection<Client> _items = new();
+    private List<Client> _itemsFull;
     private int _selectedSearchColumn;
     private bool _isSortByDescending = false;
     private int _take = 10;
     private int _skip = 0;
     private int _currentPage;
-    private List<Client> _filtered;
+    private List<Client> _filtered = new List<Client>();
+    private bool _isLoading = true;
 
     #region Notifying Properties
 
@@ -49,11 +51,11 @@ public class ClientsViewModel : ViewModelBase {
         }
     }
 
-    public ObservableCollection<Client> Clients {
-        get => _clients;
+    public ObservableCollection<Client> Items {
+        get => _items;
         set {
-            if (Equals(value, _clients)) return;
-            _clients = value;
+            if (Equals(value, _items)) return;
+            _items = value;
             RaisePropertyChanged();
         }
     }
@@ -66,7 +68,7 @@ public class ClientsViewModel : ViewModelBase {
     public int Skip {
         get => _skip;
         set {
-            if (value >= _clientsFull.Count) {
+            if (value >= _itemsFull.Count) {
                 return;
             }
 
@@ -85,10 +87,7 @@ public class ClientsViewModel : ViewModelBase {
                  return;   
             }
             
-            TakeFirstCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
-            TakePrevCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
-            TakeNextCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
-            TakeLastCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
+            ReevaluateCommands();
         }
     }
 
@@ -99,8 +98,14 @@ public class ClientsViewModel : ViewModelBase {
         set {
             if (SetField(ref _filtered, value)) {
                 TakeFirst();
+                RaisePropertyChanged(nameof(TotalPages));
             }
         }
+    }
+
+    public bool IsLoading {
+        get => _isLoading;
+        set => SetField(ref _isLoading, value);
     }
 
     #endregion
@@ -118,12 +123,11 @@ public class ClientsViewModel : ViewModelBase {
         EditItemCommand = new AsyncCommand<Client>(EditItem);
         RemoveItemCommand = new AsyncCommand<Client>(RemoveItem);
         NewItemCommand = new AsyncCommand(NewItem);
-        // TODO ПРОРАБОТАТЬ УСЛОВИЯ
+        GetDataFromDb();
         TakeNextCommand = new Command(TakeNext, () => CurrentPage + 1 < TotalPages);
         TakePrevCommand = new Command(TakePrev, () => CurrentPage + 1 > 1);
         TakeFirstCommand = new Command(TakeFirst, () => CurrentPage + 1 > 1);
         TakeLastCommand = new Command(TakeLast, () => CurrentPage + 1 < TotalPages);
-        GetDataFromDb();
         PropertyChanged += OnSearchChanged;
     }
 
@@ -135,17 +139,17 @@ public class ClientsViewModel : ViewModelBase {
         }
 
         var filtered = SearchQuery == ""
-            ? new ObservableCollection<Client>(_clientsFull)
+            ? new ObservableCollection<Client>(_itemsFull)
             : SelectedSearchColumn switch {
-                1 => _clientsFull
+                1 => _itemsFull
                     .Where(it => it.ClientId.ToString().Contains(SearchQuery)),
-                2 => _clientsFull
+                2 => _itemsFull
                     .Where(it => it.LastName.ToLower().Contains(SearchQuery.ToLower())),
-                3 => _clientsFull
+                3 => _itemsFull
                     .Where(it => it.FirstName.ToLower().Contains(SearchQuery.ToLower())),
-                4 => _clientsFull
+                4 => _itemsFull
                     .Where(it => it.Gender!.Name.ToLower().Contains(SearchQuery.ToLower())),
-                _ => _clientsFull
+                _ => _itemsFull
                     .Where(it =>
                         it.LastName.ToLower().Contains(SearchQuery.ToLower()) ||
                         it.FirstName.ToLower().Contains(SearchQuery.ToLower()) ||
@@ -171,15 +175,22 @@ public class ClientsViewModel : ViewModelBase {
     }
 
     private async void GetDataFromDb() {
-        await using var db = new MyDatabase();
-        var users = db.GetAsync<Client>();
-        var list = await users.ToListAsync();
-        list = list.Select(it => {
-            it.Gender = it.Gender = db.GetById<Gender>(it.GenderId);
-            return it;
-        }).ToList();
-        _clientsFull = list;
-        Filtered = _clientsFull;
+        await Task.Run(async () => {
+            IsLoading = true;
+            await using var db = new MyDatabase();
+            var users = db.GetAsync<Client>();
+            var list = await users.ToListAsync();
+            list = list.Select(it => {
+                it.Gender = it.Gender = db.GetById<Gender>(it.GenderId);
+                return it;
+            }).ToList();
+            _itemsFull = list;
+            Filtered = _itemsFull;
+            IsLoading = false;
+            Dispatcher.UIThread.Invoke(ReevaluateCommands);
+            // ReevaluateCommands();
+            return Task.CompletedTask;
+        });
     }
 
     private async Task RemoveItem(Client? arg) {
@@ -204,9 +215,9 @@ public class ClientsViewModel : ViewModelBase {
                 await using var db = new MyDatabase();
                 client.GenderId = client.Gender!.GenderId;
                 await db.UpdateAsync(client.ClientId, client);
+                GetDataFromDb();
             }
         ).ShowDialog(_view);
-        GetDataFromDb();
     }
 
     private async Task NewItem() {
@@ -223,29 +234,36 @@ public class ClientsViewModel : ViewModelBase {
 
     private void TakeNext() {
         Skip += Take;
-        Clients = new ObservableCollection<Client>(
+        Items = new ObservableCollection<Client>(
             Filtered.Skip(Skip).Take(Take)
         );
     }
 
     private void TakePrev() {
         Skip -= Take;
-        Clients = new ObservableCollection<Client>(
+        Items = new ObservableCollection<Client>(
             Filtered.Skip(Skip).Take(Take)
         );
     }
 
     private void TakeFirst() {
         Skip = 0;
-        Clients = new ObservableCollection<Client>(
+        Items = new ObservableCollection<Client>(
             Filtered.Take(Take)
         );
     }
     
     private void TakeLast() {
         Skip = Filtered.Count - Take;
-        Clients = new ObservableCollection<Client>(
+        Items = new ObservableCollection<Client>(
             Filtered.TakeLast(Take)
         );
+    }
+    
+    private void ReevaluateCommands() {
+        TakeFirstCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
+        TakePrevCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
+        TakeNextCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
+        TakeLastCommand.RaiseCanExecuteChanged(null, EventArgs.Empty);
     }
 }
